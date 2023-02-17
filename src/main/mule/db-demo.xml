@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="49a69885-8f41-4c9d-a2f1-a45d6f8091b7" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="c74c464e-f366-4058-8454-805646131987" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="hiyabtsion" database="employee_directory"/>
+	</db:config>
+	<flow name="db-demoFlow" doc:id="ad661d11-28d4-4bb3-9ae4-a3f0965414f6" >
+		<http:listener doc:name="Listener" doc:id="95ef01fe-674a-4f2f-86ee-aabcebf0fc34" config-ref="HTTP_Listener_config" path="db">
+			<http:error-response statusCode="#[vars.statuscode]" reasonPhrase="#[vars.message]"/>
+		</http:listener>
+		<db:select doc:name="Select" doc:id="f8ddff12-cb2b-44f9-a738-b239cfa0b748" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM customer;]]></db:sql>
+		</db:select>
+		<logger level="INFO" doc:name="Logger" doc:id="7336f736-996b-4b07-8911-fc6f36b1e182" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="54573b08-8c01-4ac2-8ae6-3cfaa7dfa108" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload
+
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="5d3fe866-da24-4747-b740-f42f473a4c79" type="DB:CONNECTIVITY">
+				<ee:transform doc:name="Transform Message" doc:id="bfcff008-118b-4f4e-a317-130c74829166" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message":"gjhdkjh"
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="statuscode" ><![CDATA[500]]></ee:set-variable>
+						<ee:set-variable variableName="message" ><![CDATA["InternalError"]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>
