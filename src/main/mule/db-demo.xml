@@ -38,7 +38,7 @@ payload
 output application/json
 ---
 {
-	"message":"gjhdkjh"
+	"message":"not connected"
 }]]></ee:set-payload>
 					</ee:message>
 					<ee:variables >
